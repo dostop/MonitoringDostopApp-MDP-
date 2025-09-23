@@ -3,11 +3,17 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter_dostop_monitoreo/src/utils/utils.dart';
+import 'package:http/http.dart' as http;
+
+import 'api_http_client.dart';
 
 class AuthService extends ChangeNotifier {
   final String _baseUrl = 'dostop.mx';
+
+  AuthService({http.Client? client}) : _client = client ?? ApiHttpClient.instance.client;
+
+  final http.Client _client;
 
   final storage = const FlutterSecureStorage();
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -20,7 +26,7 @@ class AuthService extends ChangeNotifier {
 
     try {
       final url = Uri.https(_baseUrl, '/api/AppGuardias/loginApp');
-      final resp = await http.post(url,
+      final resp = await _client.post(url,
           headers: {'Content-Type': 'application/json'},
           body: json.encode(authData));
       final Map<String, dynamic> decodeResp = json.decode(resp.body);
@@ -60,7 +66,7 @@ class AuthService extends ChangeNotifier {
       };
 
       final url = Uri.https(_baseUrl, '/api/statusFracc');
-      final resp = await http.get(url, headers: headers);
+      final resp = await _client.get(url, headers: headers);
       final Map<String, dynamic> decodeResp = json.decode(resp.body);
 
       if (resp.statusCode == 403) {

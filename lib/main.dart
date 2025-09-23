@@ -1,15 +1,17 @@
-import 'package:flutter_dostop_monitoreo/src/screens/check_auth.dart';
-import 'package:flutter_dostop_monitoreo/src/screens/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
+import 'package:flutter_dostop_monitoreo/src/screens/check_auth.dart';
+import 'package:flutter_dostop_monitoreo/src/screens/settings.dart';
 import 'package:flutter_dostop_monitoreo/src/screens/login.dart';
 import 'package:flutter_dostop_monitoreo/src/utils/utils.dart';
 import 'package:flutter_dostop_monitoreo/src/screens/home.dart';
 import 'package:flutter_dostop_monitoreo/src/utils/user_preferences.dart';
+import 'package:flutter_dostop_monitoreo/src/services/api_http_client.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await ApiHttpClient.initialize('assets/certs/dostop_ca_chain.pem');
   final prefs = UserPreferences();
   await prefs.initPrefs();
   runApp(const MyApp());
