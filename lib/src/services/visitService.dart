@@ -3,12 +3,18 @@ import 'dart:developer';
 
 import 'package:flutter/material.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
-import 'package:http/http.dart' as http;
 import 'package:flutter_dostop_monitoreo/src/utils/utils.dart';
+import 'package:http/http.dart' as http;
+
+import 'api_http_client.dart';
 
 class VisitService extends ChangeNotifier {
   //final String _baseUrl = '192.168.100.7';
   final String _prod = 'dostop.mx';
+
+  VisitService({http.Client? client}) : _client = client ?? ApiHttpClient.instance.client;
+
+  final http.Client _client;
 
   final _storage = const FlutterSecureStorage();
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
@@ -25,7 +31,7 @@ class VisitService extends ChangeNotifier {
 
     try {
       final url = Uri.https(_prod, '/api/AppGuardias/mVisitaVehicular');
-      final resp = await http.get(url, headers: headers);
+      final resp = await _client.get(url, headers: headers);
       final Map<String, dynamic> decodeResp = json.decode(resp.body);
 
       return decodeResp;
@@ -45,7 +51,7 @@ class VisitService extends ChangeNotifier {
 
     try {
       final url = Uri.https(_prod, '/api/AppGuardias/mSalidaVehicular');
-      final resp = await http.get(url, headers: headers);
+      final resp = await _client.get(url, headers: headers);
       final Map<String, dynamic> decodeResp = json.decode(resp.body);
 
       return decodeResp;
@@ -65,7 +71,7 @@ class VisitService extends ChangeNotifier {
 
     try {
       final url = Uri.https(_prod, '/api/AppGuardias/mVisitaPeatonal');
-      final resp = await http.get(url, headers: headers);
+      final resp = await _client.get(url, headers: headers);
       final Map<String, dynamic> decodeResp = json.decode(resp.body);
 
       return decodeResp;
@@ -85,7 +91,7 @@ class VisitService extends ChangeNotifier {
 
     try {
       final url = Uri.https(_prod, '/api/AppGuardias/mSalidaPeatonal');
-      final resp = await http.get(url, headers: headers);
+      final resp = await _client.get(url, headers: headers);
       final Map<String, dynamic> decodeResp = json.decode(resp.body);
       return decodeResp;
     } catch (e) {
@@ -104,7 +110,7 @@ class VisitService extends ChangeNotifier {
 
     try {
       final url = Uri.https(_prod, '/api/AppGuardias/ultimaVisitaFacial');
-      final resp = await http.get(url, headers: headers);
+      final resp = await _client.get(url, headers: headers);
       final Map<String, dynamic> decodeResp = json.decode(resp.body);
       return decodeResp;
     } catch (e) {
@@ -123,7 +129,7 @@ class VisitService extends ChangeNotifier {
 
     try {
       final url = Uri.https(_prod, '/api/AppGuardias/ultimaSalidaFacial');
-      final resp = await http.get(url, headers: headers);
+      final resp = await _client.get(url, headers: headers);
       final Map<String, dynamic> decodeResp = json.decode(resp.body);
       return decodeResp;
     } catch (e) {
