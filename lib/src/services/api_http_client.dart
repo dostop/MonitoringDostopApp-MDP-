@@ -35,7 +35,7 @@ class ApiHttpClient {
 
     final httpClient = HttpClient(context: context);
     HttpOverrides.global = _ApiHttpOverrides(context);
-    _instance = ApiHttpClient(IOClient(httpClient), context);
+    _instance = ApiHttpClient._(IOClient(httpClient), context);
   }
 }
 
