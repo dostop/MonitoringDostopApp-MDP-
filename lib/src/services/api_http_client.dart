@@ -1,6 +1,8 @@
-import 'dart:io';
 
-import 'package:flutter/services.dart';
+
+import 'dart:io';
+import 'package:flutter/foundation.dart';
+import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:http/io_client.dart';
 
@@ -28,10 +30,24 @@ class ApiHttpClient {
       return;
     }
 
-    final data = await rootBundle.load(certificateAssetPath);
-    final bytes = data.buffer.asUint8List();
+    // final data = await rootBundle.load(certificateAssetPath);
+    // final bytes = data.buffer.asUint8List();
+    // final context = SecurityContext(withTrustedRoots: true);
+    // context.setTrustedCertificatesBytes(bytes);
     final context = SecurityContext(withTrustedRoots: true);
-    context.setTrustedCertificatesBytes(bytes);
+    try{
+
+    } on TlsException catch (error, stackTrace) {
+      if (Platform.isWindows) {
+        debugPrint(
+          'ApiHttpClient: Skipping custom certificate on Windows due to TLS error: '
+              '$error',
+        );
+        debugPrint('$stackTrace');
+      } else {
+    rethrow;
+    }
+    }
 
     final httpClient = HttpClient(context: context);
     HttpOverrides.global = _ApiHttpOverrides(context);
