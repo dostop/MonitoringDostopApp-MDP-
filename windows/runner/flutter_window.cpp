@@ -51,9 +51,11 @@ bool FlutterWindow::OnCreate() {
     this->Show();
   });
 
+
   if (!ScheduleFrameIfPossible(flutter_controller_->engine())) {
     ForceRedrawIfPossible(flutter_controller_.get());
   }
+
 
   return true;
 }
