@@ -1,9 +1,10 @@
 import 'package:auto_size_text/auto_size_text.dart';
-import 'package:flutter_dostop_monitoreo/src/ui/input_decorations.dart';
-import 'package:flutter_dostop_monitoreo/src/utils/utils.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:rflutter_alert/rflutter_alert.dart';
+
+import '../utils/utils.dart';
+import 'input_decorations.dart';
 
 openDialogSimple(
     BuildContext context, String title, String contenido, String textOpcionOK) {
@@ -180,8 +181,7 @@ openAlertBoxSimple(BuildContext context, String title, String contentAlert,
                           style: TextStyle(fontSize: 25),
                         ),
                         style: ElevatedButton.styleFrom(
-                            elevation: 8,
-                            primary: mainGreenColor,
+                            elevation: 8, backgroundColor: mainGreenColor,
                             shape: const RoundedRectangleBorder(
                                 borderRadius:
                                     BorderRadius.all(Radius.circular(15))),
@@ -259,8 +259,7 @@ openAlertBoxConfirm(BuildContext context,
                         style: TextStyle(fontSize: 25, color: Colors.white),
                       ),
                       style: ElevatedButton.styleFrom(
-                          elevation: 8,
-                          primary: mainGreenColor,
+                          elevation: 8, backgroundColor: mainGreenColor,
                           shape: const RoundedRectangleBorder(
                               borderRadius:
                                   BorderRadius.all(Radius.circular(15))),
@@ -277,8 +276,7 @@ openAlertBoxConfirm(BuildContext context,
                           style: TextStyle(fontSize: 25, color: Colors.white),
                         ),
                         style: ElevatedButton.styleFrom(
-                            elevation: 8,
-                            primary: mainRedColor,
+                            elevation: 8, backgroundColor: mainRedColor,
                             shape: const RoundedRectangleBorder(
                                 borderRadius:
                                     BorderRadius.all(Radius.circular(15))),

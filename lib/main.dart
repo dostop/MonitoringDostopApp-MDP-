@@ -1,17 +1,15 @@
+import 'package:flutter_dostop_monitoreo/src/screens/check_auth.dart';
+import 'package:flutter_dostop_monitoreo/src/screens/settings.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
-import 'package:flutter_dostop_monitoreo/src/screens/check_auth.dart';
-import 'package:flutter_dostop_monitoreo/src/screens/settings.dart';
 import 'package:flutter_dostop_monitoreo/src/screens/login.dart';
 import 'package:flutter_dostop_monitoreo/src/utils/utils.dart';
 import 'package:flutter_dostop_monitoreo/src/screens/home.dart';
 import 'package:flutter_dostop_monitoreo/src/utils/user_preferences.dart';
-import 'package:flutter_dostop_monitoreo/src/services/api_http_client.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await ApiHttpClient.initialize('assets/certs/dostop_ca_chain.pem');
   final prefs = UserPreferences();
   await prefs.initPrefs();
   runApp(const MyApp());
@@ -60,11 +58,11 @@ class _MyAppState extends State<MyApp> {
           cardColor: Colors.white,
           primaryColor: mainBlueColor,
           progressIndicatorTheme:
-              const ProgressIndicatorThemeData(color: mainBlueColor),
+          const ProgressIndicatorThemeData(color: mainBlueColor),
           textTheme: const TextTheme(
-            caption: TextStyle(color: Colors.black),
-            headline1: TextStyle(color: Colors.black),
-            bodyText1: TextStyle(color: Colors.black),
+            bodySmall: TextStyle(color: Colors.black),
+            displayLarge: TextStyle(color: Colors.black),
+            bodyLarge: TextStyle(color: Colors.black),
           ),
           appBarTheme: const AppBarTheme(
               color: lightBackgroundColor,
@@ -74,17 +72,17 @@ class _MyAppState extends State<MyApp> {
               iconTheme: IconThemeData(color: Colors.black),
               actionsIconTheme: IconThemeData(color: Colors.black)),
           snackBarTheme:
-              const SnackBarThemeData(actionTextColor: lightBackgroundColor),
+          const SnackBarThemeData(actionTextColor: lightBackgroundColor),
           colorScheme:
-              ColorScheme.fromSwatch(primarySwatch: mainBlueMaterialColor)
-                  .copyWith(background: lightBackgroundColor)),
+          ColorScheme.fromSwatch(primarySwatch: mainBlueMaterialColor)
+              .copyWith(background: lightBackgroundColor)),
       darkTheme: ThemeData(
         fontFamily: 'PlusJakarta',
         brightness: Brightness.dark,
         scaffoldBackgroundColor: darkBackgroundColor,
         primaryColor: darkBackgroundColor,
         progressIndicatorTheme:
-            const ProgressIndicatorThemeData(color: mainBlueColor),
+        const ProgressIndicatorThemeData(color: mainBlueColor),
         textSelectionTheme: const TextSelectionThemeData(
             cursorColor: mainBlueColor,
             selectionHandleColor: mainBlueColor,
@@ -96,7 +94,7 @@ class _MyAppState extends State<MyApp> {
             iconTheme: IconThemeData(color: Colors.white)),
         cardColor: cardDarkColor,
         snackBarTheme:
-            const SnackBarThemeData(actionTextColor: darkBackgroundColor),
+        const SnackBarThemeData(actionTextColor: darkBackgroundColor),
         elevatedButtonTheme: ElevatedButtonThemeData(
             style: ElevatedButton.styleFrom(
                 textStyle: const TextStyle(fontFamily: 'PlusJakarta'))),

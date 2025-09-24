@@ -1,14 +1,13 @@
+
 import 'package:flutter/material.dart';
-import 'package:flutter_dostop_monitoreo/src/ui/dialogs.dart';
 import 'package:provider/provider.dart';
 
-import 'package:flutter_dostop_monitoreo/src/services/auth_services.dart';
-//import 'package:flutter_dostop_monitoreo/src/ui/dialogs.dart';
-//import 'package:flutter_dostop_monitoreo/src/utils/user_preferences.dart';
-import 'package:flutter_dostop_monitoreo/src/providers/login_form_provider.dart';
-import 'package:flutter_dostop_monitoreo/src/ui/input_decorations.dart';
-import 'package:flutter_dostop_monitoreo/src/utils/utils.dart';
-import 'package:flutter_dostop_monitoreo/src/widgets/auth_background.dart';
+import '../providers/login_form_provider.dart';
+import '../services/auth_services.dart';
+import '../ui/dialogs.dart';
+import '../ui/input_decorations.dart';
+import '../utils/utils.dart';
+import '../widgets/auth_background.dart';
 
 class LoginScreen extends StatelessWidget {
   const LoginScreen({Key? key}) : super(key: key);

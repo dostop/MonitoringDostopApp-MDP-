@@ -49,8 +49,7 @@ LinearGradient linearGradientDisabled = const LinearGradient(
     colors: [mainGrayColor, secondaryGrayColor]);
 
 final ButtonStyle raisedButtonStyle = ElevatedButton.styleFrom(
-    onPrimary: Colors.white,
-    primary: Colors.transparent,
+    foregroundColor: Colors.white, backgroundColor: Colors.transparent,
     elevation: 8,
     padding: const EdgeInsets.all(0.0),
     shape: const RoundedRectangleBorder(
@@ -59,7 +58,7 @@ final ButtonStyle raisedButtonStyle = ElevatedButton.styleFrom(
     textStyle: const TextStyle(fontSize: 18));
 
 final ButtonStyle returnButtonStyle = ElevatedButton.styleFrom(
-  primary: mainGreenColor,
+  backgroundColor: mainGreenColor,
   elevation: 8,
   alignment: Alignment.center,
   padding: const EdgeInsets.all(15.0),
