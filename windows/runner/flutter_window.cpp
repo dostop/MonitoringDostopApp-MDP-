@@ -4,6 +4,26 @@
 
 #include "flutter/generated_plugin_registrant.h"
 
+namespace {
+
+template <typename EngineT>
+auto ScheduleFrameIfPossible(EngineT* engine) -> decltype(engine->ScheduleFrame(), bool()) {
+  engine->ScheduleFrame();
+  return true;
+}
+
+inline bool ScheduleFrameIfPossible(...) { return false; }
+
+template <typename ControllerT>
+auto ForceRedrawIfPossible(ControllerT* controller) -> decltype(controller->ForceRedraw(), bool()) {
+  controller->ForceRedraw();
+  return true;
+}
+
+inline bool ForceRedrawIfPossible(...) { return false; }
+
+}  // namespace
+
 FlutterWindow::FlutterWindow(const flutter::DartProject& project)
     : project_(project) {}
 
@@ -32,7 +52,9 @@ bool FlutterWindow::OnCreate() {
   });
 
 
-  flutter_controller_->engine()->ScheduleFrame();
+  if (!ScheduleFrameIfPossible(flutter_controller_->engine())) {
+    ForceRedrawIfPossible(flutter_controller_.get());
+  }
 
 
   return true;
