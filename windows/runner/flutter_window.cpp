@@ -31,6 +31,8 @@ bool FlutterWindow::OnCreate() {
     this->Show();
   });
 
+  flutter_controller_->engine()->ScheduleFrame();
+
   return true;
 }
 
