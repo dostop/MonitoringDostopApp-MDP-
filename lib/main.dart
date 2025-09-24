@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 
 import 'package:flutter_dostop_monitoreo/src/screens/login.dart';
+import 'package:flutter_dostop_monitoreo/src/services/api_http_client.dart';
 import 'package:flutter_dostop_monitoreo/src/utils/utils.dart';
 import 'package:flutter_dostop_monitoreo/src/screens/home.dart';
 import 'package:flutter_dostop_monitoreo/src/utils/user_preferences.dart';
@@ -12,6 +13,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = UserPreferences();
   await prefs.initPrefs();
+  await ApiHttpClient.initialize('assets/certs/dostop_ca_chain.pem');
   runApp(const MyApp());
 }
 
