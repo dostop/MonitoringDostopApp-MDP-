@@ -1,4 +1,6 @@
 import 'dart:async';
+import 'dart:developer';
+
 import 'package:flutter/material.dart';
 
 import '../../main.dart';
@@ -635,6 +637,17 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       ),
     );
 
+  }
+
+  Text _txtFormat(String text) {
+    return Text(
+      text,
+      textAlign: TextAlign.center,
+      style: const TextStyle(
+        fontSize: 18,
+        fontWeight: FontWeight.bold,
+      ),
+    );
   }
 
   List<Widget> _buildAccessWidgetsNoExpanded() {
