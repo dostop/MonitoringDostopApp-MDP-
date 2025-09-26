@@ -1,35 +1,16 @@
-# Monitoring Dostop App (MDP)
+# flutter_dostop_monitoreo
 
-Aplicación de escritorio desarrollada con Flutter para el monitoreo básico de eventos en un contador interactivo. Aunque la base del proyecto parte del _starter_ oficial de Flutter, este repositorio ha sido adaptado y configurado para ejecutarse principalmente en equipos con Windows.
+A new Flutter project.
 
-## Tabla de contenidos
-- [Visión general](#visión-general)
-- [Características principales](#características-principales)
-- [Arquitectura y estructura del proyecto](#arquitectura-y-estructura-del-proyecto)
-- [Requisitos del sistema](#requisitos-del-sistema)
-- [Instalación](#instalación)
-  - [1. Preparar el entorno](#1-preparar-el-entorno)
-  - [2. Clonar el repositorio](#2-clonar-el-repositorio)
-  - [3. Instalar dependencias](#3-instalar-dependencias)
-  - [4. Ejecutar la aplicación en modo desarrollo](#4-ejecutar-la-aplicación-en-modo-desarrollo)
-- [Flujo de la aplicación](#flujo-de-la-aplicación)
-- [Ejecución de pruebas](#ejecución-de-pruebas)
-- [Generar un paquete para Windows](#generar-un-paquete-para-windows)
-- [Buenas prácticas para contribuciones](#buenas-prácticas-para-contribuciones)
-- [Solución de problemas comunes](#solución-de-problemas-comunes)
-- [Recursos adicionales](#recursos-adicionales)
+## Getting Started
 
-## Visión general
-Monitoring Dostop App (MDP) es una aplicación Flutter orientada al monitoreo visual de un contador. El propósito principal es demostrar cómo construir, ejecutar y desplegar una aplicación de escritorio sencilla utilizando Flutter en Windows.
+This project is a starting point for a Flutter application.
 
-Si bien actualmente la funcionalidad se centra en un contador incremental, el proyecto sienta las bases para incorporar lógica de monitoreo más compleja (por ejemplo, integración con APIs, registro de eventos o visualización de métricas) aprovechando la arquitectura modular de Flutter.
+A few resources to get you started if this is your first Flutter project:
 
-## Características principales
-- Interfaz ligera construida con widgets nativos de Flutter.
-- Flujo de navegación simple con una única pantalla principal.
-- Contador interactivo que permite al usuario incrementar valores con un botón flotante.
-- Código listo para personalización rápida, ideal para experimentar con nuevas funcionalidades de monitoreo.
-- Soporte para _hot reload_/_hot restart_ durante el desarrollo.
+- [Lab: Write your first Flutter app](https://docs.flutter.dev/get-started/codelab)
+- [Cookbook: Useful Flutter samples](https://docs.flutter.dev/cookbook)
+
 
 ## Arquitectura y estructura del proyecto
 La aplicación sigue la estructura estándar de un proyecto Flutter:
@@ -149,3 +130,4 @@ Los valores de intervalo de refresco automático, TTL y uso de ETag se pueden aj
 ---
 
 ¿Tienes dudas o quieres proponer una mejora? Abre un _issue_ o envía un _pull request_.
+

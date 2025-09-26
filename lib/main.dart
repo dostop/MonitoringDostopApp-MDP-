@@ -13,7 +13,7 @@ void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   final prefs = UserPreferences();
   await prefs.initPrefs();
-  await ApiHttpClient.initialize('assets/certs/dostop_ca_chain.pem');
+  await ApiHttpClient.initialize();
   runApp(const MyApp());
 }
 

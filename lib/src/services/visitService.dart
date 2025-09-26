@@ -1,5 +1,7 @@
+
 import 'dart:async';
 import 'dart:collection';
+
 import 'dart:convert';
 import 'dart:developer';
 
@@ -12,11 +14,29 @@ import '../utils/user_preferences.dart';
 import 'api_http_client.dart';
 
 class VisitService extends ChangeNotifier {
+
   final String _prod = 'dostop.mx';
 
   VisitService({http.Client? client}) : _client = client ?? ApiHttpClient.instance.client;
 
-  final http.Client _client;
+
+  Future<http.Response> _retryGet(
+      Uri uri, {
+        required Map<String, String> headers,
+        int retries = 3,
+      }) async {
+    late Object lastErr;
+    for (var i = 0; i < retries; i++) {
+      try {
+        return await _client.get(uri, headers: headers);
+      } catch (e) {
+        lastErr = e;
+        await Future.delayed(Duration(milliseconds: 300 * (i + 1))); // backoff
+      }
+    }
+    throw lastErr;
+  }
+
 
   final _storage = const FlutterSecureStorage();
   final UserPreferences _prefs = UserPreferences();
@@ -204,6 +224,7 @@ class VisitService extends ChangeNotifier {
   ) {
     if (_inflight.containsKey(cacheKey)) {
       return;
+
     }
     final Future<_NetworkResult> future = _executeRequest(
       cacheKey,
@@ -330,6 +351,7 @@ class VisitService extends ChangeNotifier {
         return decoded;
       }
       return <String, dynamic>{'data': decoded};
+
     } catch (e) {
       log('[VisitService] Failed to decode response body: $e');
       return <String, dynamic>{'raw': body};
@@ -432,6 +454,25 @@ class _SimpleSemaphore {
       if (!completer.isCompleted) {
         completer.complete();
       }
+
     }
+  }
+
+  // (Opcional) si en algún lugar ya llamas a estos nombres:
+
+  Future<Map<String, dynamic>> getUltimaVisitaFacial({
+    int retries = 3,
+  }) async {
+    final token = await _storage.read(key: 'token') ?? '';
+    return _getJsonPath('/api/AppGuardias/ultimaVisitaFacial',
+        token: token, hardened: true, retries: retries);
+  }
+
+  Future<Map<String, dynamic>> getUltimaSalidaFacial({
+    int retries = 3,
+  }) async {
+    final token = await _storage.read(key: 'token') ?? '';
+    return _getJsonPath('/api/AppGuardias/ultimaSalidaFacial',
+        token: token, hardened: true, retries: retries);
   }
 }
