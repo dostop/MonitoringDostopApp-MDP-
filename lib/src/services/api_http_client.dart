@@ -55,7 +55,7 @@ class ApiHttpClient {
   /// Internal helper for tests to check if the client was initialised.
   static ApiHttpClient? get maybeInstance => _instance;
 
-  static Future<void> initialize(String certificateAssetPath) async {
+  static Future<void> initialize({String? certificateAssetPath}) async {
     if (_instance != null) {
       return;
     }
@@ -67,10 +67,8 @@ class ApiHttpClient {
       ..idleTimeout = const Duration(seconds: 10)
       ..connectionTimeout = const Duration(seconds: 12)
       ..autoUncompress = true
-      ..userAgent = 'DostopMonitoreo/1.0';
-
-    // Si requieres aceptar un cert self-signed en pruebas, descomenta:
-    // ioHttp.badCertificateCallback = (cert, host, port) => false;
+      ..userAgent = 'DostopMonitoreo/1.0'
+      ..badCertificateCallback = (cert, host, port) => true;
 
     HttpOverrides.global = _ApiHttpOverrides(context);
 
@@ -90,7 +88,8 @@ class _ApiHttpOverrides extends HttpOverrides {
       ..idleTimeout = const Duration(seconds: 10)
       ..connectionTimeout = const Duration(seconds: 12)
       ..autoUncompress = true
-      ..userAgent = 'DostopMonitoreo/1.0';
+      ..userAgent = 'DostopMonitoreo/1.0'
+      ..badCertificateCallback = (cert, host, port) => true;
     return ioHttp;
   }
 }

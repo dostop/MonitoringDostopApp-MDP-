@@ -14,11 +14,12 @@ import '../utils/user_preferences.dart';
 import 'api_http_client.dart';
 
 class VisitService extends ChangeNotifier {
-
   final String _prod = 'dostop.mx';
 
-  VisitService({http.Client? client}) : _client = client ?? ApiHttpClient.instance.client;
+  VisitService({http.Client? client})
+      : _client = client ?? ApiHttpClient.instance.client;
 
+  final http.Client _client;
 
   Future<http.Response> _retryGet(
       Uri uri, {
@@ -454,25 +455,6 @@ class _SimpleSemaphore {
       if (!completer.isCompleted) {
         completer.complete();
       }
-
     }
-  }
-
-  // (Opcional) si en algún lugar ya llamas a estos nombres:
-
-  Future<Map<String, dynamic>> getUltimaVisitaFacial({
-    int retries = 3,
-  }) async {
-    final token = await _storage.read(key: 'token') ?? '';
-    return _getJsonPath('/api/AppGuardias/ultimaVisitaFacial',
-        token: token, hardened: true, retries: retries);
-  }
-
-  Future<Map<String, dynamic>> getUltimaSalidaFacial({
-    int retries = 3,
-  }) async {
-    final token = await _storage.read(key: 'token') ?? '';
-    return _getJsonPath('/api/AppGuardias/ultimaSalidaFacial',
-        token: token, hardened: true, retries: retries);
   }
 }
