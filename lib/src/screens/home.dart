@@ -90,13 +90,39 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   String _domicilioSalidaFacial = '';
   Timer? _facialSalida;
 
+  String _authToken = '';
+
   @override
   void initState() {
     super.initState();
     WidgetsBinding.instance.addObserver(this);
+    unawaited(_ensureAuthToken());
     checkStatusFracc();
     unawaited(_refreshAll(forceRefresh: true));
     _startAutoRefresh();
+  }
+
+  Map<String, String> get _imageHeaders {
+    if (_authToken.isEmpty) {
+      return _noCacheImageHeaders;
+    }
+    return <String, String>{
+      ..._noCacheImageHeaders,
+      'Authorization': 'Bearer $_authToken',
+    };
+  }
+
+  Future<void> _ensureAuthToken() async {
+    final String token = await checkService.readToken();
+    if (!mounted) {
+      return;
+    }
+    if (token == _authToken) {
+      return;
+    }
+    setState(() {
+      _authToken = token;
+    });
   }
 
   Future<void> _ultimaVisitaVehicular({bool forceRefresh = false}) async {
@@ -281,6 +307,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       Duration(seconds: _prefs.refreshIntervalSeconds.clamp(5, 60));
 
   Future<void> _refreshAll({bool forceRefresh = false}) async {
+    await _ensureAuthToken();
     final List<Future<void>> futures = <Future<void>>[];
     if (_prefs.accesoVehicular == 1) {
       futures
@@ -356,6 +383,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     }
     _isVisible = visible;
     if (visible) {
+      unawaited(_ensureAuthToken());
       unawaited(_refreshAll());
       _startAutoRefresh();
     } else {
@@ -541,7 +569,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                 : null,
                           ),
                           gaplessPlayback: true,
-                          headers: _noCacheImageHeaders,
+                          headers: _imageHeaders,
                           fit: BoxFit
                               .contain, // Ajusta la imagen al espacio disponible
                         ),
@@ -605,7 +633,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
                                 : null,
                           ),
                           gaplessPlayback: true,
-                          headers: _noCacheImageHeaders,
+                          headers: _imageHeaders,
                           fit: BoxFit
                               .contain, // Ajusta la imagen al espacio disponible
                         ),
@@ -656,37 +684,46 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         InfoAccessCard(
           tituloAcceso: 'Entrada vehicular',
           fotoEntrada: _fotoEntradaVehicular,
+          fotoEntradaVersion: _fotoEntradaVehicularVersion,
           visitanteEntrada: _nameEntradaVehicular,
           domicilioEntrada: _domicilioEntradaVehicular,
           statusEntrada: _statusEntradaVehicular,
           tituloSalida: 'Salida vehicular',
           fotoSalida: _fotoSalidaVehicular,
+          fotoSalidaVersion: _fotoSalidaVehicularVersion,
           visitanteSalida: _nameSalidaVehicular,
           domicilioSalida: _domicilioSalidaVehicular,
+          imageHeaders: _imageHeaders,
         ),
       if (_prefs.accesoPeatonal == 1)
         InfoAccessCard(
           tituloAcceso: 'Entrada peatonal',
           fotoEntrada: _fotoEntradaPeatonal,
+          fotoEntradaVersion: _fotoEntradaPeatonalVersion,
           visitanteEntrada: _nameEntradaPeatonal,
           domicilioEntrada: _domicilioEntradaPeatonal,
           statusEntrada: _statusEntradaPeatonal,
           tituloSalida: 'Salida peatonal',
           fotoSalida: _fotoSalidaPeatonal,
+          fotoSalidaVersion: _fotoSalidaPeatonalVersion,
           visitanteSalida: _nameSalidaPeatonal,
           domicilioSalida: _domicilioSalidaPeatonal,
+          imageHeaders: _imageHeaders,
         ),
       if (_prefs.accesoFacial == 1)
         InfoAccessCard(
           tituloAcceso: 'Entrada facial',
           fotoEntrada: _fotoEntradaFacial,
+          fotoEntradaVersion: _fotoEntradaFacialVersion,
           visitanteEntrada: _nameEntradaFacial,
           domicilioEntrada: _domicilioEntradaFacial,
           statusEntrada: _statusEntradaFacial,
           tituloSalida: 'Salida facial',
           fotoSalida: _fotoSalidaFacial,
+          fotoSalidaVersion: _fotoSalidaFacialVersion,
           visitanteSalida: _nameSalidaFacial,
           domicilioSalida: _domicilioSalidaFacial,
+          imageHeaders: _imageHeaders,
         ),
     ];
   }
@@ -731,6 +768,9 @@ class InfoAccessCard extends StatelessWidget {
   final String fotoSalida;
   final String visitanteSalida;
   final String domicilioSalida;
+  final String fotoEntradaVersion;
+  final String fotoSalidaVersion;
+  final Map<String, String> imageHeaders;
 
   const InfoAccessCard({
     super.key,
@@ -743,6 +783,9 @@ class InfoAccessCard extends StatelessWidget {
     required this.fotoSalida,
     required this.visitanteSalida,
     required this.domicilioSalida,
+    this.fotoEntradaVersion = '',
+    this.fotoSalidaVersion = '',
+    this.imageHeaders = _noCacheImageHeaders,
   });
 
   Color _statusColor(String status) {
@@ -780,13 +823,14 @@ class InfoAccessCard extends StatelessWidget {
                     _section(
                       context: context,
                       titulo: tituloAcceso,
-                      foto: fotoEntrada,
+                      foto: _busted(fotoEntrada, fotoEntradaVersion),
                       visitante: visitanteEntrada,
                       domicilio: domicilioEntrada,
                       status: statusEntrada,
                       isEntrada: true,
                       // Podemos calcular una altura máxima de imagen proporcional al alto disponible
                       maxImageHeight: _computeImageMaxHeight(constraints.maxHeight),
+                      imageHeaders: imageHeaders,
                     ),
                     const SizedBox(height: 12),
                     const Divider(thickness: 5),
@@ -794,12 +838,13 @@ class InfoAccessCard extends StatelessWidget {
                     _section(
                       context: context,
                       titulo: tituloSalida,
-                      foto: fotoSalida,
+                      foto: _busted(fotoSalida, fotoSalidaVersion),
                       visitante: visitanteSalida,
                       domicilio: domicilioSalida,
                       status: '',
                       isEntrada: false,
                       maxImageHeight: _computeImageMaxHeight(constraints.maxHeight),
+                      imageHeaders: imageHeaders,
                     ),
                   ],
                 ),
@@ -819,6 +864,17 @@ class InfoAccessCard extends StatelessWidget {
     final h = (maxHeight * 0.35).clamp(120.0, 280.0);
     return h;
   }
+
+  String _busted(String value, String version) {
+    if (value.isEmpty) {
+      return '';
+    }
+    return bustUrl(
+      value,
+      versionOrUpdatedAt: version.isNotEmpty ? version : null,
+    );
+  }
+
 // === Foto con altura fija + loader + error ===
   Widget _photoBox(String? url) {
     const double kPhotoHeight = 220;
@@ -857,6 +913,7 @@ class InfoAccessCard extends StatelessWidget {
           gaplessPlayback: true,
           filterQuality: FilterQuality.medium,
           cacheWidth: 1000,
+          headers: imageHeaders,
           loadingBuilder: (ctx, child, progress) {
             if (progress == null) return child;
             final v = progress.expectedTotalBytes != null
@@ -888,6 +945,7 @@ class InfoAccessCard extends StatelessWidget {
     required String status,
     required bool isEntrada,
     required double maxImageHeight,
+    required Map<String, String> imageHeaders,
   }) {
     final bg = isEntrada ? _statusColor(status) : Colors.transparent;
 
@@ -916,6 +974,7 @@ class InfoAccessCard extends StatelessWidget {
                 child: Image.network(
                   foto,
                   fit: BoxFit.contain,
+                  headers: imageHeaders,
                   // Opcional: placeholder mientras carga
                   // loadingBuilder: (ctx, child, progress) => progress == null
                   //     ? child
