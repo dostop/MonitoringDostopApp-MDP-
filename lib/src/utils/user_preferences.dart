@@ -58,6 +58,32 @@ class UserPreferences with ChangeNotifier {
     return _prefs.getInt('accesoFacial') ?? 1;
   }
 
+  int get refreshIntervalSeconds {
+    return _prefs.getInt('refreshIntervalSeconds') ?? 10;
+  }
+
+  set refreshIntervalSeconds(int value) {
+    final int safeValue = value.clamp(5, 60).toInt();
+    _prefs.setInt('refreshIntervalSeconds', safeValue);
+  }
+
+  int get cacheTtlSeconds {
+    return _prefs.getInt('cacheTtlSeconds') ?? 30;
+  }
+
+  set cacheTtlSeconds(int value) {
+    final int safeValue = value.clamp(15, 120).toInt();
+    _prefs.setInt('cacheTtlSeconds', safeValue);
+  }
+
+  bool get useEtag {
+    return _prefs.getBool('useEtag') ?? true;
+  }
+
+  set useEtag(bool value) {
+    _prefs.setBool('useEtag', value);
+  }
+
   /* set accesoTag(int value) {
     _prefs.setInt('accesoTag', value);
   }

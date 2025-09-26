@@ -134,6 +134,18 @@ El ejecutable se generará en `build\windows\runner\Release\`. Puedes comprimir 
 - [Guía de estilo de Dart](https://dart.dev/guides/language/effective-dart/style)
 - [Canal de YouTube Flutter](https://www.youtube.com/c/flutterdev)
 
+## Optimización de networking y caché
+Las consultas de visitas ahora están protegidas con varias capas de robustez para evitar saturar el servidor y ofrecer respuestas rápidas:
+
+- **Throttle y coalescing**: cada endpoint comparte un `Future` en vuelo y respeta un mínimo de 10 segundos entre actualizaciones automáticas, evitando ráfagas de peticiones.
+- **Caché en memoria con TTL y stale-while-revalidate**: los datos se sirven inmediatamente desde caché (TTL configurable) mientras se revalidan en segundo plano cuando es necesario.
+- **ETag/If-Modified-Since opcional**: se guardan los encabezados `ETag` y `Last-Modified` por URL y se envían en cada solicitud para aprovechar respuestas `304 Not Modified` cuando el servidor no ha cambiado.
+- **Límite de concurrencia global**: el cliente sólo sostiene dos solicitudes simultáneas, previniendo la saturación del backend.
+- **Botón "Actualizar"**: fuerza una actualización manual que omite throttle/TTL pero mantiene el coalescing y las validaciones condicionales.
+- **`bustUrl` para imágenes**: las fotos se cargan con un parámetro de versión (`?v=`) basado en `updatedAt` (o un timestamp) y encabezados `no-cache`, garantizando que los cambios se reflejen al instante sin parpadeos (`gaplessPlayback`).
+
+Los valores de intervalo de refresco automático, TTL y uso de ETag se pueden ajustar desde la pantalla de configuración.
+
 ---
 
 ¿Tienes dudas o quieres proponer una mejora? Abre un _issue_ o envía un _pull request_.

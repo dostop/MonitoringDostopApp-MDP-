@@ -17,6 +17,9 @@ class _SettingScreenState extends State<SettingScreen> {
   late bool _accesoVehicular, _accesoPeatonal, _accesoFacial /*, _accesoTag */;
   bool _guardando = false;
   final _prefs = UserPreferences();
+  late int _refreshIntervalSeconds;
+  late int _ttlSeconds;
+  late bool _useEtag;
 
   @override
   void initState() {
@@ -149,6 +152,82 @@ class _SettingScreenState extends State<SettingScreen> {
             ),
           ],
         ),
+        const SizedBox(height: 30),
+        _networkingOptions(),
+      ],
+    );
+  }
+
+  Widget _networkingOptions() {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const Text(
+          'Actualización automática',
+          style: TextStyle(fontSize: 25),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          children: [
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('Intervalo (${_refreshIntervalSeconds}s)'),
+                  Slider(
+                    min: 5,
+                    max: 60,
+                    divisions: 11,
+                    label: '${_refreshIntervalSeconds}s',
+                    value: _refreshIntervalSeconds.toDouble(),
+                    onChanged: (double value) {
+                      setState(() {
+                        int newValue = value.round();
+                        if (newValue < 5) newValue = 5;
+                        if (newValue > 60) newValue = 60;
+                        _refreshIntervalSeconds = newValue;
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 20),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text('TTL caché (${_ttlSeconds}s)'),
+                  Slider(
+                    min: 15,
+                    max: 120,
+                    divisions: 21,
+                    label: '${_ttlSeconds}s',
+                    value: _ttlSeconds.toDouble(),
+                    onChanged: (double value) {
+                      setState(() {
+                        int newValue = value.round();
+                        if (newValue < 15) newValue = 15;
+                        if (newValue > 120) newValue = 120;
+                        _ttlSeconds = newValue;
+                      });
+                    },
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        SwitchListTile(
+          contentPadding: EdgeInsets.zero,
+          title: const Text('Usar validaciones ETag/If-Modified-Since'),
+          value: _useEtag,
+          onChanged: (bool value) {
+            setState(() {
+              _useEtag = value;
+            });
+          },
+        ),
       ],
     );
   }
@@ -183,6 +262,9 @@ class _SettingScreenState extends State<SettingScreen> {
     _prefs.accesoVehicular = _accesoVehicular ? 1 : 0;
     _prefs.accesoPeatonal = _accesoPeatonal ? 1 : 0;
     _prefs.accesoFacial = _accesoFacial ? 1 : 0;
+    _prefs.refreshIntervalSeconds = _refreshIntervalSeconds;
+    _prefs.cacheTtlSeconds = _ttlSeconds;
+    _prefs.useEtag = _useEtag;
     //_prefs.accesoTag = _accesoTag ? 1 : 0;
 
     openAlertBoxSimple(
@@ -198,6 +280,9 @@ class _SettingScreenState extends State<SettingScreen> {
     _accesoVehicular = _prefs.accesoVehicular == 1;
     _accesoPeatonal = _prefs.accesoPeatonal == 1;
     _accesoFacial = _prefs.accesoFacial == 1;
+    _refreshIntervalSeconds = _prefs.refreshIntervalSeconds;
+    _ttlSeconds = _prefs.cacheTtlSeconds;
+    _useEtag = _prefs.useEtag;
     //_accesoTag = _prefs.accesoTag == 1;
   }
 }

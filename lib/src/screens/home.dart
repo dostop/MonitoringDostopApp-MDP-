@@ -10,6 +10,23 @@ import 'package:flutter_dostop_monitoreo/src/utils/utils.dart';
 
 import '../../main.dart';
 
+const Map<String, String> _noCacheImageHeaders = <String, String>{
+  'Cache-Control': 'no-cache, no-store, must-revalidate',
+  'Pragma': 'no-cache',
+  'Expires': '0',
+};
+
+String bustUrl(String url, {String? versionOrUpdatedAt}) {
+  final String trimmed = versionOrUpdatedAt?.trim() ?? '';
+  final String sep = url.contains('?') ? '&' : '?';
+  final String stamp = trimmed.isNotEmpty
+      ? trimmed
+      : DateTime.now().microsecondsSinceEpoch.toString();
+  final String busted = '$url${sep}v=$stamp';
+  log('[VisitService] img bust: url=$busted');
+  return busted;
+}
+
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
 
@@ -17,16 +34,18 @@ class HomeScreen extends StatefulWidget {
   _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _HomeScreenState extends State<HomeScreen> {
+class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   final checkService = AuthService();
   final _prefs = UserPreferences();
   final _txtPassCtrl = TextEditingController();
   final _visitService = VisitService();
   Map<String, dynamic> jsonData = {};
+  bool _isVisible = true;
   //entrada vehicular
   String _nameEntradaVehicular = '';
   String _fotoEntradaVehicular = '';
+  String _fotoEntradaVehicularVersion = '';
   String _statusEntradaVehicular = '';
   String _domicilioEntradaVehicular = '';
   Timer? _vehicularAcceso;
@@ -35,6 +54,7 @@ class _HomeScreenState extends State<HomeScreen> {
   //salida vehicular
   String _nameSalidaVehicular = '';
   String _fotoSalidaVehicular = '';
+  String _fotoSalidaVehicularVersion = '';
   String _domicilioSalidaVehicular = '';
   Timer? _vehicularSalida;
   //String _tipoSalidaVehicular = '';
@@ -42,6 +62,7 @@ class _HomeScreenState extends State<HomeScreen> {
   //Entrada peatonal
   String _nameEntradaPeatonal = '';
   String _fotoEntradaPeatonal = '';
+  String _fotoEntradaPeatonalVersion = '';
   String _statusEntradaPeatonal = '';
   String _domicilioEntradaPeatonal = '';
   Timer? _peatonalAcceso;
@@ -50,6 +71,7 @@ class _HomeScreenState extends State<HomeScreen> {
   //salida peatonal
   String _nameSalidaPeatonal = '';
   String _fotoSalidaPeatonal = '';
+  String _fotoSalidaPeatonalVersion = '';
   String _domicilioSalidaPeatonal = '';
   Timer? _peatonalSalida;
   //String _tipoSalidaPeatonal = '';
@@ -57,6 +79,7 @@ class _HomeScreenState extends State<HomeScreen> {
   //entrada facial
   String _nameEntradaFacial = '';
   String _fotoEntradaFacial = '';
+  String _fotoEntradaFacialVersion = '';
   String _statusEntradaFacial = '';
   String _domicilioEntradaFacial = '';
   Timer? _facialAcceso;
@@ -65,6 +88,7 @@ class _HomeScreenState extends State<HomeScreen> {
   //salida facial
   String _nameSalidaFacial = '';
   String _fotoSalidaFacial = '';
+  String _fotoSalidaFacialVersion = '';
   String _domicilioSalidaFacial = '';
   Timer? _facialSalida;
   //String _tipoSalidaFacial = '';
@@ -74,207 +98,273 @@ class _HomeScreenState extends State<HomeScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     checkStatusFracc();
+    unawaited(_refreshAll(forceRefresh: true));
+    _startAutoRefresh();
+  }
+
+  Future<void> _ultimaVisitaVehicular({bool forceRefresh = false}) async {
+    final Map<String, dynamic> resp =
+        await _visitService.ultimaVisitaVehicular(forceRefresh: forceRefresh);
+    if (!mounted) return;
+    if (resp.containsKey('statusCode')) {
+      log('error de consulta acceso vehicular');
+      return;
+    }
+    final dynamic data = resp['data'];
+    if (data is Map<String, dynamic> && data.isNotEmpty) {
+      setState(() {
+        _nameEntradaVehicular = data['name'] ?? '';
+        _statusEntradaVehicular = data['status'] == null
+            ? 'Esperando respuesta'
+            : data['status'];
+        _fotoEntradaVehicular = data['rostro'] == null ? '' : data['rostro'];
+        _fotoEntradaVehicularVersion = _extractVersion(data);
+        _domicilioEntradaVehicular = data['address'] ?? '';
+      });
+    } else {
+      setState(() {
+        _nameEntradaVehicular = '';
+        _fotoEntradaVehicular = '';
+        _fotoEntradaVehicularVersion = '';
+        _statusEntradaVehicular = '';
+        _domicilioEntradaVehicular = '';
+      });
+    }
+  }
+
+  Future<void> _ultimaSalidaVehicular({bool forceRefresh = false}) async {
+    final Map<String, dynamic> resp =
+        await _visitService.ultimaSalidaVehicular(forceRefresh: forceRefresh);
+    if (!mounted) return;
+    if (resp.containsKey('statusCode')) {
+      log('error de consulta salida vehicular');
+      return;
+    }
+    final dynamic data = resp['data'];
+    if (data is Map<String, dynamic> && data.isNotEmpty) {
+      setState(() {
+        _nameSalidaVehicular = data['name'] ?? '';
+        _fotoSalidaVehicular = data['rostro'] == null ? '' : data['rostro'];
+        _fotoSalidaVehicularVersion = _extractVersion(data);
+        _domicilioSalidaVehicular = data['address'] ?? '';
+      });
+    } else {
+      setState(() {
+        _nameSalidaVehicular = '';
+        _fotoSalidaVehicular = '';
+        _fotoSalidaVehicularVersion = '';
+        _domicilioSalidaVehicular = '';
+      });
+    }
+  }
+
+  Future<void> _ultimaVisitaPeatonal({bool forceRefresh = false}) async {
+    final Map<String, dynamic> resp =
+        await _visitService.ultimaVisitaPeatonal(forceRefresh: forceRefresh);
+    if (!mounted) return;
+    if (resp.containsKey('statusCode')) {
+      log('error de consulta acceso peatonal');
+      return;
+    }
+    final dynamic data = resp['data'];
+    if (data is Map<String, dynamic> && data.isNotEmpty) {
+      setState(() {
+        _nameEntradaPeatonal = data['name'] ?? '';
+        _statusEntradaPeatonal = data['status'] == null
+            ? 'Esperando respuesta'
+            : data['status'];
+        _fotoEntradaPeatonal = data['rostro'] == null ? '' : data['rostro'];
+        _fotoEntradaPeatonalVersion = _extractVersion(data);
+        _domicilioEntradaPeatonal = data['address'] ?? '';
+      });
+    } else {
+      setState(() {
+        _nameEntradaPeatonal = '';
+        _fotoEntradaPeatonal = '';
+        _fotoEntradaPeatonalVersion = '';
+        _statusEntradaPeatonal = '';
+        _domicilioEntradaPeatonal = '';
+      });
+    }
+  }
+
+  Future<void> _ultimaSalidaPeatonal({bool forceRefresh = false}) async {
+    final Map<String, dynamic> resp =
+        await _visitService.ultimaSalidaPeatonal(forceRefresh: forceRefresh);
+    if (!mounted) return;
+    if (resp.containsKey('statusCode')) {
+      log('error de consulta salia peatonal');
+      return;
+    }
+    final dynamic data = resp['data'];
+    if (data is Map<String, dynamic> && data.isNotEmpty) {
+      setState(() {
+        _nameSalidaPeatonal = data['name'] ?? '';
+        _fotoSalidaPeatonal = data['rostro'] == null ? '' : data['rostro'];
+        _fotoSalidaPeatonalVersion = _extractVersion(data);
+        _domicilioSalidaPeatonal = data['address'] ?? '';
+      });
+    } else {
+      setState(() {
+        _nameSalidaPeatonal = '';
+        _fotoSalidaPeatonal = '';
+        _fotoSalidaPeatonalVersion = '';
+        _domicilioSalidaPeatonal = '';
+      });
+    }
+  }
+
+  Future<void> _ultimaVisitaFacial({bool forceRefresh = false}) async {
+    final Map<String, dynamic> resp =
+        await _visitService.ultimaVisitafacial(forceRefresh: forceRefresh);
+    if (!mounted) return;
+    if (resp.containsKey('statusCode')) {
+      log('error de consulta acceso facial');
+      return;
+    }
+    final dynamic data = resp['data'];
+    if (data is Map<String, dynamic> && data.isNotEmpty) {
+      setState(() {
+        _nameEntradaFacial = data['name'] ?? '';
+        _statusEntradaFacial = data['status'] == null
+            ? 'Esperando respuesta'
+            : data['status'];
+        _fotoEntradaFacial = data['img'] == null ? '' : data['img'];
+        _fotoEntradaFacialVersion = _extractVersion(data);
+        _domicilioEntradaFacial = data['address'] ?? '';
+      });
+    } else {
+      setState(() {
+        _nameEntradaFacial = '';
+        _fotoEntradaFacial = '';
+        _fotoEntradaFacialVersion = '';
+        _statusEntradaFacial = '';
+        _domicilioEntradaFacial = '';
+      });
+    }
+  }
+
+  Future<void> _ultimaSalidaFacial({bool forceRefresh = false}) async {
+    final Map<String, dynamic> resp =
+        await _visitService.ultimaSalidaFacial(forceRefresh: forceRefresh);
+    if (!mounted) return;
+    if (resp.containsKey('statusCode')) {
+      log('error de consulta salida facial');
+      return;
+    }
+    final dynamic data = resp['data'];
+    if (data is Map<String, dynamic> && data.isNotEmpty) {
+      setState(() {
+        _nameSalidaFacial = data['name'] ?? '';
+        _fotoSalidaFacial = data['img'] == null ? '' : data['img'];
+        _fotoSalidaFacialVersion = _extractVersion(data);
+        _domicilioSalidaFacial = data['address'] ?? '';
+      });
+    } else {
+      setState(() {
+        _nameSalidaFacial = '';
+        _fotoSalidaFacial = '';
+        _fotoSalidaFacialVersion = '';
+        _domicilioSalidaFacial = '';
+      });
+    }
+  }
+
+  String _extractVersion(Map<String, dynamic> data) {
+    final dynamic updatedAt = data['updatedAt'] ??
+        data['updated_at'] ??
+        data['lastUpdated'] ??
+        data['last_updated'] ??
+        data['updated'] ??
+        data['version'];
+    return updatedAt == null ? '' : updatedAt.toString();
+  }
+
+  Duration get _refreshInterval =>
+      Duration(seconds: _prefs.refreshIntervalSeconds.clamp(5, 60));
+
+  Future<void> _refreshAll({bool forceRefresh = false}) async {
+    final List<Future<void>> futures = <Future<void>>[];
     if (_prefs.accesoVehicular == 1) {
-      _ultimaVisitaVehicular();
-      _ultimaSalidaVehicular();
+      futures
+        ..add(_ultimaVisitaVehicular(forceRefresh: forceRefresh))
+        ..add(_ultimaSalidaVehicular(forceRefresh: forceRefresh));
     }
     if (_prefs.accesoPeatonal == 1) {
-      _ultimaVisitaPeatonal();
-      _ultimaSalidaPeatonal();
+      futures
+        ..add(_ultimaVisitaPeatonal(forceRefresh: forceRefresh))
+        ..add(_ultimaSalidaPeatonal(forceRefresh: forceRefresh));
     }
     if (_prefs.accesoFacial == 1) {
-      _ultimaVisitaFacial();
-      _ultimaSalidaFacial();
+      futures
+        ..add(_ultimaVisitaFacial(forceRefresh: forceRefresh))
+        ..add(_ultimaSalidaFacial(forceRefresh: forceRefresh));
+    }
+    if (futures.isEmpty) {
+      return;
+    }
+    await Future.wait(futures);
+  }
+
+  void _startAutoRefresh() {
+    _cancelTimers();
+    if (!_isVisible) {
+      return;
+    }
+    final Duration interval = _refreshInterval;
+    if (_prefs.accesoVehicular == 1) {
+      _vehicularAcceso = _createTimer(interval, () => _ultimaVisitaVehicular());
+      _vehicularSalida = _createTimer(interval, () => _ultimaSalidaVehicular());
+    }
+    if (_prefs.accesoPeatonal == 1) {
+      _peatonalAcceso = _createTimer(interval, () => _ultimaVisitaPeatonal());
+      _peatonalSalida = _createTimer(interval, () => _ultimaSalidaPeatonal());
+    }
+    if (_prefs.accesoFacial == 1) {
+      _facialAcceso = _createTimer(interval, () => _ultimaVisitaFacial());
+      _facialSalida = _createTimer(interval, () => _ultimaSalidaFacial());
     }
   }
 
-  void _ultimaVisitaVehicular() async {
-    _vehicularAcceso =
-        Timer.periodic(const Duration(seconds: 2), (Timer timer) async {
-      if (mounted) {
-        log('ejecutando');
-        Map<String, dynamic> resp = await _visitService.ultimaVisitaVehicular();
-        if (resp.containsKey('statusCode')) {
-          log('error de consulta acceso vehicular');
-        } else {
-          if (resp['data'].isEmpty) {
-            setState(() {
-              _nameEntradaVehicular = '';
-              _fotoEntradaVehicular = '';
-              _statusEntradaVehicular = '';
-              _domicilioEntradaVehicular = '';
-              //_tipoEntradaVehicular = '';
-            });
-          } else {
-            setState(() {
-              _nameEntradaVehicular = resp['data']['name'];
-              _statusEntradaVehicular = resp['data']['status'] == null
-                  ? 'Esperando respuesta'
-                  : resp['data']['status'];
-              _fotoEntradaVehicular =
-                  resp['data']['rostro'] == null ? '' : resp['data']['rostro'];
-              _domicilioEntradaVehicular = resp['data']['address'];
-              // _tipoEntradaVehicular = resp['data']['typeVisit'];
-            });
-          }
-        }
-        setState(() {});
+  void _cancelTimers() {
+    _vehicularAcceso?.cancel();
+    _vehicularAcceso = null;
+    _vehicularSalida?.cancel();
+    _vehicularSalida = null;
+    _peatonalAcceso?.cancel();
+    _peatonalAcceso = null;
+    _peatonalSalida?.cancel();
+    _peatonalSalida = null;
+    _facialAcceso?.cancel();
+    _facialAcceso = null;
+    _facialSalida?.cancel();
+    _facialSalida = null;
+  }
+
+  Timer _createTimer(Duration interval, Future<void> Function() callback) {
+    return Timer.periodic(interval, (Timer timer) {
+      if (!mounted || !_isVisible) {
+        return;
       }
+      unawaited(callback());
     });
   }
 
-  void _ultimaSalidaVehicular() async {
-    _vehicularSalida =
-        Timer.periodic(const Duration(seconds: 2), (Timer timer) async {
-      if (mounted) {
-        Map<String, dynamic> resp = await _visitService.ultimaSalidaVehicular();
-        if (resp.containsKey('statusCode')) {
-          log('error de consulta salida vehicular');
-        } else {
-          if (resp['data'].isEmpty) {
-            setState(() {
-              _nameSalidaVehicular = '';
-              _fotoSalidaVehicular = '';
-              _domicilioSalidaVehicular = '';
-              //_tipoSalidaVehicular = '';
-            });
-          } else {
-            setState(() {
-              _nameSalidaVehicular = resp['data']['name'];
-              _fotoSalidaVehicular =
-                  resp['data']['rostro'] == null ? '' : resp['data']['rostro'];
-              _domicilioSalidaVehicular = resp['data']['address'];
-              //_tipoSalidaVehicular = resp['data']['typeVisit'];
-            });
-          }
-        }
-        setState(() {});
-      }
-    });
-  }
-
-  void _ultimaVisitaPeatonal() {
-    _peatonalAcceso =
-        Timer.periodic(const Duration(milliseconds: 2500), (Timer timer) async {
-      if (mounted) {
-        log('ejecutando');
-        Map<String, dynamic> resp = await _visitService.ultimaVisitaPeatonal();
-        if (resp.containsKey('statusCode')) {
-          log('error de consulta acceso peatonal');
-        } else {
-          if (resp['data'].isEmpty) {
-            setState(() {
-              _nameEntradaPeatonal = '';
-              _fotoEntradaPeatonal = '';
-              _statusEntradaPeatonal = '';
-              _domicilioEntradaPeatonal = '';
-              //_tipoEntradaPeatonal = '';
-            });
-          } else {
-            setState(() {
-              _nameEntradaPeatonal = resp['data']['name'];
-              _statusEntradaPeatonal = resp['data']['status'] == null
-                  ? 'Esperando respuesta'
-                  : resp['data']['status'];
-              _fotoEntradaPeatonal =
-                  resp['data']['rostro'] == null ? '' : resp['data']['rostro'];
-              _domicilioEntradaPeatonal = resp['data']['address'];
-              //_tipoEntradaPeatonal = resp['data']['typeVisit'];
-            });
-          }
-        }
-        setState(() {});
-      }
-    });
-  }
-
-  void _ultimaSalidaPeatonal() {
-    _peatonalSalida =
-        Timer.periodic(const Duration(milliseconds: 2500), (Timer timer) async {
-      if (mounted) {
-        Map<String, dynamic> resp = await _visitService.ultimaSalidaPeatonal();
-        if (resp.containsKey('statusCode')) {
-          log('error de consulta salia peatonal');
-        } else {
-          if (resp['data'].isEmpty) {
-            setState(() {
-              _nameSalidaPeatonal = '';
-              _fotoSalidaPeatonal = '';
-              _domicilioSalidaPeatonal = '';
-              //_tipoSalidaPeatonal = '';
-            });
-          } else {
-            setState(() {
-              _nameSalidaPeatonal = resp['data']['name'];
-              _fotoSalidaPeatonal =
-                  resp['data']['rostro'] == null ? '' : resp['data']['rostro'];
-              _domicilioSalidaPeatonal = resp['data']['address'];
-              //_tipoSalidaPeatonal = resp['data']['typeVisit'];
-            });
-          }
-        }
-        setState(() {});
-      }
-    });
-  }
-
-  void _ultimaVisitaFacial() {
-    _facialAcceso =
-        Timer.periodic(const Duration(milliseconds: 2250), (Timer timer) async {
-      Map<String, dynamic> resp = await _visitService.ultimaVisitafacial();
-      if (resp.containsKey('statusCode')) {
-        log('error de consulta acceso facial');
-      } else {
-        if (resp['data'].isEmpty) {
-          setState(() {
-            _nameEntradaFacial = '';
-            _fotoEntradaFacial = '';
-            _statusEntradaFacial = '';
-            _domicilioEntradaFacial = '';
-            //_tipoEntradaFacial = '';
-          });
-        } else {
-          setState(() {
-            _nameEntradaFacial = resp['data']['name'];
-            _statusEntradaFacial = resp['data']['status'] == null
-                ? 'Esperando respuesta'
-                : resp['data']['status'];
-            _fotoEntradaFacial =
-                resp['data']['img'] == null ? '' : resp['data']['img'];
-            _domicilioEntradaFacial = resp['data']['address'];
-            //_tipoEntradaFacial = resp['data']['typeVisit'];
-          });
-        }
-      }
-    });
-  }
-
-  void _ultimaSalidaFacial() {
-    _facialSalida =
-        Timer.periodic(const Duration(milliseconds: 2250), (Timer timer) async {
-      Map<String, dynamic> resp = await _visitService.ultimaSalidaFacial();
-      if (resp.containsKey('statusCode')) {
-        log('error de consulta salida facial');
-      } else {
-        if (resp['data'].isEmpty) {
-          setState(() {
-            _nameSalidaFacial = '';
-            _fotoSalidaFacial = '';
-            _domicilioSalidaFacial = '';
-            //_tipoSalidaFacial = '';
-          });
-        } else {
-          setState(() {
-            _nameSalidaFacial = resp['data']['name'];
-            _fotoSalidaFacial =
-                resp['data']['img'] == null ? '' : resp['data']['img'];
-            _domicilioSalidaFacial = resp['data']['address'];
-            //_tipoSalidaFacial = resp['data']['typeVisit'];
-          });
-        }
-      }
-    });
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    final bool visible = state == AppLifecycleState.resumed;
+    if (_isVisible == visible) {
+      return;
+    }
+    _isVisible = visible;
+    if (visible) {
+      unawaited(_refreshAll());
+      _startAutoRefresh();
+    } else {
+      _cancelTimers();
+    }
   }
 
   void checkStatusFracc() async {
@@ -318,6 +408,14 @@ class _HomeScreenState extends State<HomeScreen> {
             SizedBox(width: MediaQuery.of(context).size.width * 0.03),
             IconButton(
               icon: Icon(
+                Icons.refresh,
+                size: MediaQuery.of(context).size.height * 0.03,
+              ),
+              onPressed: () => _refreshAll(forceRefresh: true),
+            ),
+            SizedBox(width: MediaQuery.of(context).size.width * 0.03),
+            IconButton(
+              icon: Icon(
                 Icons.settings,
                 size: MediaQuery.of(context).size.height * 0.03,
               ),
@@ -344,7 +442,9 @@ class _HomeScreenState extends State<HomeScreen> {
                       'Salida vehicular',
                       _fotoSalidaVehicular,
                       _nameSalidaVehicular,
-                      _domicilioSalidaVehicular
+                      _domicilioSalidaVehicular,
+                      fotoEntradaVersion: _fotoEntradaVehicularVersion,
+                      fotoSalidaVersion: _fotoSalidaVehicularVersion
                       //_tipoSalidaVehicular
                       )),
             ),
@@ -362,6 +462,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 _fotoSalidaPeatonal,
                 _nameSalidaPeatonal,
                 _domicilioSalidaPeatonal,
+                fotoEntradaVersion: _fotoEntradaPeatonalVersion,
+                fotoSalidaVersion: _fotoSalidaPeatonalVersion,
                 // _tipoSalidaPeatonal
               )),
             ),
@@ -379,6 +481,8 @@ class _HomeScreenState extends State<HomeScreen> {
                 _fotoSalidaFacial,
                 _nameSalidaFacial,
                 _domicilioSalidaFacial,
+                fotoEntradaVersion: _fotoEntradaFacialVersion,
+                fotoSalidaVersion: _fotoSalidaFacialVersion,
                 //_tipoSalidaFacial
               )),
             ),
@@ -400,7 +504,10 @@ class _HomeScreenState extends State<HomeScreen> {
     String visitanteSalida,
     String domicilioSalida,
     //String tipoSalida,
-  ) {
+    {
+    String fotoEntradaVersion = '',
+    String fotoSalidaVersion = '',
+  }) {
     return Container(
       padding: EdgeInsets.all(15),
       margin: EdgeInsets.all(5),
@@ -435,7 +542,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     ? Container()
                     : Flexible(
                         child: Image.network(
-                          fotoEntrada,
+                          bustUrl(
+                            fotoEntrada,
+                            versionOrUpdatedAt: fotoEntradaVersion.isNotEmpty
+                                ? fotoEntradaVersion
+                                : null,
+                          ),
+                          gaplessPlayback: true,
+                          headers: _noCacheImageHeaders,
                           fit: BoxFit
                               .contain, // Ajusta la imagen al espacio disponible
                         ),
@@ -492,7 +606,14 @@ class _HomeScreenState extends State<HomeScreen> {
                     ? Container()
                     : Flexible(
                         child: Image.network(
-                          fotoSalida,
+                          bustUrl(
+                            fotoSalida,
+                            versionOrUpdatedAt: fotoSalidaVersion.isNotEmpty
+                                ? fotoSalidaVersion
+                                : null,
+                          ),
+                          gaplessPlayback: true,
+                          headers: _noCacheImageHeaders,
                           fit: BoxFit
                               .contain, // Ajusta la imagen al espacio disponible
                         ),
@@ -551,12 +672,9 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   void dispose() {
-    _vehicularAcceso?.cancel();
-    _vehicularSalida?.cancel();
-    _peatonalAcceso?.cancel();
-    _peatonalSalida?.cancel();
-    _facialAcceso?.cancel();
-    _facialSalida?.cancel();
+    WidgetsBinding.instance.removeObserver(this);
+    _cancelTimers();
+    _txtPassCtrl.dispose();
     super.dispose();
   }
 }
