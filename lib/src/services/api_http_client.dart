@@ -83,8 +83,8 @@ class _ApiHttpOverrides extends HttpOverrides {
   final SecurityContext context;
 
   @override
-  HttpClient createHttpClient(SecurityContext? _) {
-    final ioHttp = HttpClient(context: context)
+  HttpClient createHttpClient(SecurityContext? overrideContext) {
+    final ioHttp = super.createHttpClient(overrideContext ?? context)
       ..idleTimeout = const Duration(seconds: 10)
       ..connectionTimeout = const Duration(seconds: 12)
       ..autoUncompress = true
