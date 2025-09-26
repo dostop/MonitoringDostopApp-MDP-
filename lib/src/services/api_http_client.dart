@@ -25,33 +25,24 @@ class ApiHttpClient {
   http.Client get client => _client;
   SecurityContext get securityContext => _context;
 
-  static Future<void> initialize(String certificateAssetPath) async {
-    if (_instance != null) {
-      return;
-    }
+  static Future<void> initialize() async {
+    if (_instance != null) return;
 
-    // final data = await rootBundle.load(certificateAssetPath);
-    // final bytes = data.buffer.asUint8List();
-    // final context = SecurityContext(withTrustedRoots: true);
-    // context.setTrustedCertificatesBytes(bytes);
     final context = SecurityContext(withTrustedRoots: true);
-    try{
 
-    } on TlsException catch (error, stackTrace) {
-      if (Platform.isWindows) {
-        debugPrint(
-          'ApiHttpClient: Skipping custom certificate on Windows due to TLS error: '
-              '$error',
-        );
-        debugPrint('$stackTrace');
-      } else {
-    rethrow;
-    }
-    }
+    final ioHttp = HttpClient(context: context)
+      ..idleTimeout = const Duration(seconds: 10)
+      ..connectionTimeout = const Duration(seconds: 12)
+      ..autoUncompress = true
+      ..userAgent = 'DostopMonitoreo/1.0';
 
-    final httpClient = HttpClient(context: context);
+    // Si requieres aceptar un cert self-signed en pruebas, descomenta:
+    // ioHttp.badCertificateCallback = (cert, host, port) => false;
+
     HttpOverrides.global = _ApiHttpOverrides(context);
-    _instance = ApiHttpClient._(IOClient(httpClient), context);
+
+    final ioClient = IOClient(ioHttp);
+    _instance = ApiHttpClient._(ioClient, context);
   }
 }
 
@@ -62,6 +53,12 @@ class _ApiHttpOverrides extends HttpOverrides {
 
   @override
   HttpClient createHttpClient(SecurityContext? _) {
-    return HttpClient(context: context);
+    final ioHttp = HttpClient(context: context)
+      ..idleTimeout = const Duration(seconds: 10)
+      ..connectionTimeout = const Duration(seconds: 12)
+      ..autoUncompress = true
+      ..userAgent = 'DostopMonitoreo/1.0';
+    return ioHttp;
   }
 }
+

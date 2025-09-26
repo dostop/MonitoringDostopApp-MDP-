@@ -1,14 +1,12 @@
 import 'dart:async';
-import 'dart:developer';
-
-import 'package:flutter_dostop_monitoreo/src/services/auth_services.dart';
-import 'package:flutter_dostop_monitoreo/src/services/visitService.dart';
-import 'package:flutter_dostop_monitoreo/src/ui/dialogs.dart';
-import 'package:flutter_dostop_monitoreo/src/utils/user_preferences.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter_dostop_monitoreo/src/utils/utils.dart';
 
 import '../../main.dart';
+import '../services/auth_services.dart';
+import '../services/visitService.dart';
+import '../ui/dialogs.dart';
+import '../utils/user_preferences.dart';
+import '../utils/utils.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({Key? key}) : super(key: key);
@@ -18,58 +16,49 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  final GlobalKey<NavigatorState> navigatorKey = GlobalKey<NavigatorState>();
   final checkService = AuthService();
   final _prefs = UserPreferences();
   final _txtPassCtrl = TextEditingController();
   final _visitService = VisitService();
-  Map<String, dynamic> jsonData = {};
-  //entrada vehicular
+
+  // Entrada vehicular
   String _nameEntradaVehicular = '';
   String _fotoEntradaVehicular = '';
   String _statusEntradaVehicular = '';
   String _domicilioEntradaVehicular = '';
   Timer? _vehicularAcceso;
-  //String _tipoEntradaVehicular = '';
 
-  //salida vehicular
+  // Salida vehicular
   String _nameSalidaVehicular = '';
   String _fotoSalidaVehicular = '';
   String _domicilioSalidaVehicular = '';
   Timer? _vehicularSalida;
-  //String _tipoSalidaVehicular = '';
 
-  //Entrada peatonal
+  // Entrada peatonal
   String _nameEntradaPeatonal = '';
   String _fotoEntradaPeatonal = '';
   String _statusEntradaPeatonal = '';
   String _domicilioEntradaPeatonal = '';
   Timer? _peatonalAcceso;
-  //String _tipoEntradaPeatonal = '';
 
-  //salida peatonal
+  // Salida peatonal
   String _nameSalidaPeatonal = '';
   String _fotoSalidaPeatonal = '';
   String _domicilioSalidaPeatonal = '';
   Timer? _peatonalSalida;
-  //String _tipoSalidaPeatonal = '';
 
-  //entrada facial
+  // Entrada facial
   String _nameEntradaFacial = '';
   String _fotoEntradaFacial = '';
   String _statusEntradaFacial = '';
   String _domicilioEntradaFacial = '';
   Timer? _facialAcceso;
-  //String _tipoEntradaFacial = '';
 
-  //salida facial
+  // Salida facial
   String _nameSalidaFacial = '';
   String _fotoSalidaFacial = '';
   String _domicilioSalidaFacial = '';
   Timer? _facialSalida;
-  //String _tipoSalidaFacial = '';
-  //entrada tag
-  //salida tag
 
   @override
   void initState() {
@@ -89,209 +78,146 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  void _ultimaVisitaVehicular() async {
-    _vehicularAcceso =
-        Timer.periodic(const Duration(seconds: 2), (Timer timer) async {
-      if (mounted) {
-        log('ejecutando');
-        Map<String, dynamic> resp = await _visitService.ultimaVisitaVehicular();
-        if (resp.containsKey('statusCode')) {
-          log('error de consulta acceso vehicular');
-        } else {
+  void _ultimaVisitaVehicular() {
+    _vehicularAcceso = Timer.periodic(const Duration(seconds: 2), (timer) async {
+      if (!mounted) return;
+      final resp = await _visitService.ultimaVisitaVehicular();
+      if (!resp.containsKey('statusCode')) {
+        setState(() {
           if (resp['data'].isEmpty) {
-            setState(() {
-              _nameEntradaVehicular = '';
-              _fotoEntradaVehicular = '';
-              _statusEntradaVehicular = '';
-              _domicilioEntradaVehicular = '';
-              //_tipoEntradaVehicular = '';
-            });
+            _nameEntradaVehicular = '';
+            _fotoEntradaVehicular = '';
+            _statusEntradaVehicular = '';
+            _domicilioEntradaVehicular = '';
           } else {
-            setState(() {
-              _nameEntradaVehicular = resp['data']['name'];
-              _statusEntradaVehicular = resp['data']['status'] == null
-                  ? 'Esperando respuesta'
-                  : resp['data']['status'];
-              _fotoEntradaVehicular =
-                  resp['data']['rostro'] == null ? '' : resp['data']['rostro'];
-              _domicilioEntradaVehicular = resp['data']['address'];
-              // _tipoEntradaVehicular = resp['data']['typeVisit'];
-            });
+            _nameEntradaVehicular = resp['data']['name'];
+            _statusEntradaVehicular = resp['data']['status'] ?? 'Esperando respuesta';
+            _fotoEntradaVehicular = resp['data']['rostro'] ?? '';
+            _domicilioEntradaVehicular = resp['data']['address'];
           }
-        }
-        setState(() {});
+        });
       }
     });
   }
 
-  void _ultimaSalidaVehicular() async {
-    _vehicularSalida =
-        Timer.periodic(const Duration(seconds: 2), (Timer timer) async {
-      if (mounted) {
-        Map<String, dynamic> resp = await _visitService.ultimaSalidaVehicular();
-        if (resp.containsKey('statusCode')) {
-          log('error de consulta salida vehicular');
-        } else {
+  void _ultimaSalidaVehicular() {
+    _vehicularSalida = Timer.periodic(const Duration(seconds: 2), (timer) async {
+      if (!mounted) return;
+      final resp = await _visitService.ultimaSalidaVehicular();
+      if (!resp.containsKey('statusCode')) {
+        setState(() {
           if (resp['data'].isEmpty) {
-            setState(() {
-              _nameSalidaVehicular = '';
-              _fotoSalidaVehicular = '';
-              _domicilioSalidaVehicular = '';
-              //_tipoSalidaVehicular = '';
-            });
+            _nameSalidaVehicular = '';
+            _fotoSalidaVehicular = '';
+            _domicilioSalidaVehicular = '';
           } else {
-            setState(() {
-              _nameSalidaVehicular = resp['data']['name'];
-              _fotoSalidaVehicular =
-                  resp['data']['rostro'] == null ? '' : resp['data']['rostro'];
-              _domicilioSalidaVehicular = resp['data']['address'];
-              //_tipoSalidaVehicular = resp['data']['typeVisit'];
-            });
+            _nameSalidaVehicular = resp['data']['name'];
+            _fotoSalidaVehicular = resp['data']['rostro'] ?? '';
+            _domicilioSalidaVehicular = resp['data']['address'];
           }
-        }
-        setState(() {});
+        });
       }
     });
   }
 
   void _ultimaVisitaPeatonal() {
-    _peatonalAcceso =
-        Timer.periodic(const Duration(milliseconds: 2500), (Timer timer) async {
-      if (mounted) {
-        log('ejecutando');
-        Map<String, dynamic> resp = await _visitService.ultimaVisitaPeatonal();
-        if (resp.containsKey('statusCode')) {
-          log('error de consulta acceso peatonal');
-        } else {
+    _peatonalAcceso = Timer.periodic(const Duration(milliseconds: 2500), (timer) async {
+      if (!mounted) return;
+      final resp = await _visitService.ultimaVisitaPeatonal();
+      if (!resp.containsKey('statusCode')) {
+        setState(() {
           if (resp['data'].isEmpty) {
-            setState(() {
-              _nameEntradaPeatonal = '';
-              _fotoEntradaPeatonal = '';
-              _statusEntradaPeatonal = '';
-              _domicilioEntradaPeatonal = '';
-              //_tipoEntradaPeatonal = '';
-            });
+            _nameEntradaPeatonal = '';
+            _fotoEntradaPeatonal = '';
+            _statusEntradaPeatonal = '';
+            _domicilioEntradaPeatonal = '';
           } else {
-            setState(() {
-              _nameEntradaPeatonal = resp['data']['name'];
-              _statusEntradaPeatonal = resp['data']['status'] == null
-                  ? 'Esperando respuesta'
-                  : resp['data']['status'];
-              _fotoEntradaPeatonal =
-                  resp['data']['rostro'] == null ? '' : resp['data']['rostro'];
-              _domicilioEntradaPeatonal = resp['data']['address'];
-              //_tipoEntradaPeatonal = resp['data']['typeVisit'];
-            });
+            _nameEntradaPeatonal = resp['data']['name'];
+            _statusEntradaPeatonal = resp['data']['status'] ?? 'Esperando respuesta';
+            _fotoEntradaPeatonal = resp['data']['rostro'] ?? '';
+            _domicilioEntradaPeatonal = resp['data']['address'];
           }
-        }
-        setState(() {});
+        });
       }
     });
   }
 
   void _ultimaSalidaPeatonal() {
-    _peatonalSalida =
-        Timer.periodic(const Duration(milliseconds: 2500), (Timer timer) async {
-      if (mounted) {
-        Map<String, dynamic> resp = await _visitService.ultimaSalidaPeatonal();
-        if (resp.containsKey('statusCode')) {
-          log('error de consulta salia peatonal');
-        } else {
+    _peatonalSalida = Timer.periodic(const Duration(milliseconds: 2500), (timer) async {
+      if (!mounted) return;
+      final resp = await _visitService.ultimaSalidaPeatonal();
+      if (!resp.containsKey('statusCode')) {
+        setState(() {
           if (resp['data'].isEmpty) {
-            setState(() {
-              _nameSalidaPeatonal = '';
-              _fotoSalidaPeatonal = '';
-              _domicilioSalidaPeatonal = '';
-              //_tipoSalidaPeatonal = '';
-            });
+            _nameSalidaPeatonal = '';
+            _fotoSalidaPeatonal = '';
+            _domicilioSalidaPeatonal = '';
           } else {
-            setState(() {
-              _nameSalidaPeatonal = resp['data']['name'];
-              _fotoSalidaPeatonal =
-                  resp['data']['rostro'] == null ? '' : resp['data']['rostro'];
-              _domicilioSalidaPeatonal = resp['data']['address'];
-              //_tipoSalidaPeatonal = resp['data']['typeVisit'];
-            });
+            _nameSalidaPeatonal = resp['data']['name'];
+            _fotoSalidaPeatonal = resp['data']['rostro'] ?? '';
+            _domicilioSalidaPeatonal = resp['data']['address'];
           }
-        }
-        setState(() {});
+        });
       }
     });
   }
 
   void _ultimaVisitaFacial() {
-    _facialAcceso =
-        Timer.periodic(const Duration(milliseconds: 2250), (Timer timer) async {
-      Map<String, dynamic> resp = await _visitService.ultimaVisitafacial();
-      if (resp.containsKey('statusCode')) {
-        log('error de consulta acceso facial');
-      } else {
-        if (resp['data'].isEmpty) {
-          setState(() {
+    _facialAcceso = Timer.periodic(const Duration(milliseconds: 2250), (timer) async {
+      if (!mounted) return;
+      final resp = await _visitService.ultimaVisitafacial();
+      if (!resp.containsKey('statusCode')) {
+        setState(() {
+          if (resp['data'].isEmpty) {
             _nameEntradaFacial = '';
             _fotoEntradaFacial = '';
             _statusEntradaFacial = '';
             _domicilioEntradaFacial = '';
-            //_tipoEntradaFacial = '';
-          });
-        } else {
-          setState(() {
+          } else {
             _nameEntradaFacial = resp['data']['name'];
-            _statusEntradaFacial = resp['data']['status'] == null
-                ? 'Esperando respuesta'
-                : resp['data']['status'];
-            _fotoEntradaFacial =
-                resp['data']['img'] == null ? '' : resp['data']['img'];
+            _statusEntradaFacial = resp['data']['status'] ?? 'Esperando respuesta';
+            _fotoEntradaFacial = resp['data']['img'] ?? '';
             _domicilioEntradaFacial = resp['data']['address'];
-            //_tipoEntradaFacial = resp['data']['typeVisit'];
-          });
-        }
+          }
+        });
       }
     });
   }
 
   void _ultimaSalidaFacial() {
-    _facialSalida =
-        Timer.periodic(const Duration(milliseconds: 2250), (Timer timer) async {
-      Map<String, dynamic> resp = await _visitService.ultimaSalidaFacial();
-      if (resp.containsKey('statusCode')) {
-        log('error de consulta salida facial');
-      } else {
-        if (resp['data'].isEmpty) {
-          setState(() {
+    _facialSalida = Timer.periodic(const Duration(milliseconds: 2250), (timer) async {
+      if (!mounted) return;
+      final resp = await _visitService.ultimaSalidaFacial();
+      if (!resp.containsKey('statusCode')) {
+        setState(() {
+          if (resp['data'].isEmpty) {
             _nameSalidaFacial = '';
             _fotoSalidaFacial = '';
             _domicilioSalidaFacial = '';
-            //_tipoSalidaFacial = '';
-          });
-        } else {
-          setState(() {
+          } else {
             _nameSalidaFacial = resp['data']['name'];
-            _fotoSalidaFacial =
-                resp['data']['img'] == null ? '' : resp['data']['img'];
+            _fotoSalidaFacial = resp['data']['img'] ?? '';
             _domicilioSalidaFacial = resp['data']['address'];
-            //_tipoSalidaFacial = resp['data']['typeVisit'];
-          });
-        }
+          }
+        });
       }
     });
   }
 
   void checkStatusFracc() async {
-    String status = await checkService.statusFracc();
+    final status = await checkService.statusFracc();
     if (status == 'Suspendido' || status == 'Cancelado' || status == '403') {
       openAlertBoxSimple(
-          context,
-          'Lamentablemente el servicio de Dostop ha sido suspendido.\nPor favor, contacta con la administración',
-          '',
-          visibleContent: false,
-          showButton: false);
+        context,
+        'Lamentablemente el servicio de Dostop ha sido suspendido.\nPor favor, contacta con la administración',
+        '',
+        visibleContent: false,
+        showButton: false,
+      );
 
-      Future.delayed(const Duration(seconds: 10), () async {
-        //checkService.deletePlayerIdOS();
+      Future.delayed(const Duration(seconds: 10), () {
         checkService.logout();
-        Navigator.of(context)
-            .pushNamedAndRemoveUntil('login', (Route<dynamic> route) => false);
+        Navigator.of(context).pushNamedAndRemoveUntil('login', (route) => false);
       });
     }
   }
@@ -307,241 +233,153 @@ class _HomeScreenState extends State<HomeScreen> {
           leadingWidth: MediaQuery.of(context).size.width * 0.2,
           actions: [
             IconButton(
-                padding: const EdgeInsets.all(0),
-                icon: Icon(
-                  Theme.of(context).brightness == Brightness.dark
-                      ? Icons.wb_sunny_outlined
-                      : Icons.nightlight_round,
-                  size: MediaQuery.of(context).size.height * 0.03,
-                ),
-                onPressed: MyApp.of(context)!.changeTheme),
-            SizedBox(width: MediaQuery.of(context).size.width * 0.03),
+              icon: Icon(
+                Theme.of(context).brightness == Brightness.dark
+                    ? Icons.wb_sunny_outlined
+                    : Icons.nightlight_round,
+                size: MediaQuery.of(context).size.height * 0.03,
+              ),
+              onPressed: MyApp.of(context)!.changeTheme,
+            ),
             IconButton(
               icon: Icon(
                 Icons.settings,
                 size: MediaQuery.of(context).size.height * 0.03,
               ),
-              onPressed: () {
-                _settings();
-              },
+              onPressed: _settings,
             ),
-            SizedBox(width: MediaQuery.of(context).size.width * 0.025),
           ],
         ),
-        body: Row(
-          children: [
-            Visibility(
-              visible: _prefs.accesoVehicular == 1,
-              child: Expanded(
-                  child: _infoContainer(
-                      'Entrada vehicular',
-                      _fotoEntradaVehicular,
-                      _nameEntradaVehicular,
-                      _domicilioEntradaVehicular,
-                      _statusEntradaVehicular,
-                      //'Aceptada',
-                      //_tipoEntradaVehicular,
-                      'Salida vehicular',
-                      _fotoSalidaVehicular,
-                      _nameSalidaVehicular,
-                      _domicilioSalidaVehicular
-                      //_tipoSalidaVehicular
-                      )),
-            ),
-            Visibility(
-              visible: _prefs.accesoPeatonal == 1,
-              child: Expanded(
-                  child: _infoContainer(
-                'Entrada peatonal',
-                _fotoEntradaPeatonal,
-                _nameEntradaPeatonal,
-                _domicilioEntradaPeatonal,
-                _statusEntradaPeatonal,
-                //_tipoEntradaPeatonal,
-                'Salida peatonal',
-                _fotoSalidaPeatonal,
-                _nameSalidaPeatonal,
-                _domicilioSalidaPeatonal,
-                // _tipoSalidaPeatonal
-              )),
-            ),
-            Visibility(
-              visible: _prefs.accesoFacial == 1,
-              child: Expanded(
-                  child: _infoContainer(
-                'Entrada facial',
-                _fotoEntradaFacial,
-                _nameEntradaFacial,
-                _domicilioEntradaFacial,
-                _statusEntradaFacial,
-                //_tipoEntradaFacial,
-                'Salida facial',
-                _fotoSalidaFacial,
-                _nameSalidaFacial,
-                _domicilioSalidaFacial,
-                //_tipoSalidaFacial
-              )),
-            ),
-          ],
+        body: LayoutBuilder(
+          builder: (context, constraints) {
+            final isSmallScreen = constraints.maxWidth < 900;
+
+            // Pantalla chica: scroll vertical sin Expanded
+            if (isSmallScreen) {
+              return SingleChildScrollView(
+                padding: const EdgeInsets.all(10),
+                child: Column(
+                  children: _buildAccessWidgetsNoExpanded(),
+                ),
+              );
+            }
+
+            // Pantalla grande: fila estirada en alto con Expanded
+            return SizedBox(
+              height: constraints.maxHeight,
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: _buildAccessWidgetsExpanded(),
+              ),
+            );
+          },
         ),
       ),
     );
   }
 
-  Widget _infoContainer(
-    String tituloAcceso,
-    String fotoEntrada,
-    String visitanteEntrada,
-    String domicilioEntrada,
-    String statusEntrada,
-    //String tipoEntrada,
-    String tituloSalida,
-    String fotoSalida,
-    String visitanteSalida,
-    String domicilioSalida,
-    //String tipoSalida,
-  ) {
-    return Container(
-      padding: EdgeInsets.all(15),
-      margin: EdgeInsets.all(5),
-      decoration: BoxDecoration(
-          border: Border.all(
-            width: 3,
-            color: _prefs.themeMode == 'Dark' ? Colors.white : Colors.black,
+  List<Widget> _buildAccessWidgetsExpanded() {
+    return [
+      if (_prefs.accesoVehicular == 1)
+        Expanded(
+          child: InfoAccessCard(
+            tituloAcceso: 'Entrada vehicular',
+            fotoEntrada: _fotoEntradaVehicular,
+            visitanteEntrada: _nameEntradaVehicular,
+            domicilioEntrada: _domicilioEntradaVehicular,
+            statusEntrada: _statusEntradaVehicular,
+            tituloSalida: 'Salida vehicular',
+            fotoSalida: _fotoSalidaVehicular,
+            visitanteSalida: _nameSalidaVehicular,
+            domicilioSalida: _domicilioSalidaVehicular,
           ),
-          borderRadius: BorderRadius.circular(30)),
-      child: Column(
-        children: [
-          Expanded(
-              child: Container(
-            decoration: BoxDecoration(
-              borderRadius: BorderRadius.circular(30),
-              color: statusEntrada == 'Aceptada'
-                  ? mainGreenColor
-                  : statusEntrada == 'Rechazada'
-                      ? mainRedColor
-                      : statusEntrada == 'Esperando respuesta'
-                          ? Colors.orange
-                          : statusEntrada == 'Sin respuesta'
-                              ? Colors.orange
-                              : Colors.transparent,
-            ),
-            width: double.infinity,
-            child: Column(
-              children: [
-                _txtFormat(tituloAcceso),
-                const SizedBox(height: 10),
-                fotoEntrada == ''
-                    ? Container()
-                    : Flexible(
-                        child: Image.network(
-                          fotoEntrada,
-                          fit: BoxFit
-                              .contain, // Ajusta la imagen al espacio disponible
-                        ),
-                      ),
-                fotoEntrada == ''
-                    ? const SizedBox(height: 100)
-                    : const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _txtFormat('Visitante: '),
-                    Text(visitanteEntrada),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [_txtFormat('Domicilio: '), Text(domicilioEntrada)],
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [_txtFormat('Status: '), Text(statusEntrada)],
-                  /* children: [
-                    _txtFormat('Status: '),
-                    Container(
-                      padding: EdgeInsets.all(5),
-                      color: mainGreenColor,
-                      child: Text('Aceptada'),
-                    )
-                  ], */
-                ),
-                const SizedBox(height: 10),
-                /*  Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [_txtFormat('Tipo: '), Text(tipoEntrada)],
-                ) */
-              ],
-            ),
-          )),
-          const SizedBox(height: 10),
-          Divider(
-            thickness: 5,
+        ),
+      if (_prefs.accesoPeatonal == 1)
+        Expanded(
+          child: InfoAccessCard(
+            tituloAcceso: 'Entrada peatonal',
+            fotoEntrada: _fotoEntradaPeatonal,
+            visitanteEntrada: _nameEntradaPeatonal,
+            domicilioEntrada: _domicilioEntradaPeatonal,
+            statusEntrada: _statusEntradaPeatonal,
+            tituloSalida: 'Salida peatonal',
+            fotoSalida: _fotoSalidaPeatonal,
+            visitanteSalida: _nameSalidaPeatonal,
+            domicilioSalida: _domicilioSalidaPeatonal,
           ),
-          const SizedBox(height: 10),
-          Expanded(
-              child: Container(
-            width: double.infinity,
-            child: Column(
-              children: [
-                _txtFormat(tituloSalida),
-                const SizedBox(height: 10),
-                fotoSalida == ''
-                    ? Container()
-                    : Flexible(
-                        child: Image.network(
-                          fotoSalida,
-                          fit: BoxFit
-                              .contain, // Ajusta la imagen al espacio disponible
-                        ),
-                      ),
-                fotoSalida == ''
-                    ? const SizedBox(height: 100)
-                    : const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [
-                    _txtFormat('Visitante: '),
-                    Text(visitanteSalida),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [_txtFormat('Domicilio: '), Text(domicilioSalida)],
-                ),
-                const SizedBox(height: 10),
-                /* Row(
-                  mainAxisAlignment: MainAxisAlignment.center,
-                  children: [_txtFormat('Tipo: '), Text(tipoSalida)],
-                ) */
-              ],
-            ),
-          )),
-        ],
-      ),
-    );
+        ),
+      if (_prefs.accesoFacial == 1)
+        Expanded(
+          child: InfoAccessCard(
+            tituloAcceso: 'Entrada facial',
+            fotoEntrada: _fotoEntradaFacial,
+            visitanteEntrada: _nameEntradaFacial,
+            domicilioEntrada: _domicilioEntradaFacial,
+            statusEntrada: _statusEntradaFacial,
+            tituloSalida: 'Salida facial',
+            fotoSalida: _fotoSalidaFacial,
+            visitanteSalida: _nameSalidaFacial,
+            domicilioSalida: _domicilioSalidaFacial,
+          ),
+        ),
+    ];
   }
 
-  Widget _txtFormat(String txt) {
-    return Text(
-      txt,
-      style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-    );
+  List<Widget> _buildAccessWidgetsNoExpanded() {
+    return [
+      if (_prefs.accesoVehicular == 1)
+        InfoAccessCard(
+          tituloAcceso: 'Entrada vehicular',
+          fotoEntrada: _fotoEntradaVehicular,
+          visitanteEntrada: _nameEntradaVehicular,
+          domicilioEntrada: _domicilioEntradaVehicular,
+          statusEntrada: _statusEntradaVehicular,
+          tituloSalida: 'Salida vehicular',
+          fotoSalida: _fotoSalidaVehicular,
+          visitanteSalida: _nameSalidaVehicular,
+          domicilioSalida: _domicilioSalidaVehicular,
+        ),
+      if (_prefs.accesoPeatonal == 1)
+        InfoAccessCard(
+          tituloAcceso: 'Entrada peatonal',
+          fotoEntrada: _fotoEntradaPeatonal,
+          visitanteEntrada: _nameEntradaPeatonal,
+          domicilioEntrada: _domicilioEntradaPeatonal,
+          statusEntrada: _statusEntradaPeatonal,
+          tituloSalida: 'Salida peatonal',
+          fotoSalida: _fotoSalidaPeatonal,
+          visitanteSalida: _nameSalidaPeatonal,
+          domicilioSalida: _domicilioSalidaPeatonal,
+        ),
+      if (_prefs.accesoFacial == 1)
+        InfoAccessCard(
+          tituloAcceso: 'Entrada facial',
+          fotoEntrada: _fotoEntradaFacial,
+          visitanteEntrada: _nameEntradaFacial,
+          domicilioEntrada: _domicilioEntradaFacial,
+          statusEntrada: _statusEntradaFacial,
+          tituloSalida: 'Salida facial',
+          fotoSalida: _fotoSalidaFacial,
+          visitanteSalida: _nameSalidaFacial,
+          domicilioSalida: _domicilioSalidaFacial,
+        ),
+    ];
   }
 
-  _settings() {
+  void _settings() {
     openAlertBoxField(
-        context, _txtPassCtrl, 'Configuración', 'Contraseña', _funtionYes);
+      context,
+      _txtPassCtrl,
+      'Configuración',
+      'Contraseña',
+      _funtionYes,
+    );
   }
 
   void _funtionYes() {
     if (_txtPassCtrl.text == 'ConfigPass?') {
       Navigator.of(context, rootNavigator: true).pop('dialog');
       Navigator.pushReplacementNamed(context, 'setting');
-      //Navigator.of(context).pushNamed('setting');
     } else {
       openDialogSimple(context, '¡Error al autorizar!',
           'La contraseña es incorrecta', 'Aceptar');
@@ -558,5 +396,248 @@ class _HomeScreenState extends State<HomeScreen> {
     _facialAcceso?.cancel();
     _facialSalida?.cancel();
     super.dispose();
+  }
+}
+
+class InfoAccessCard extends StatelessWidget {
+  final String tituloAcceso;
+  final String fotoEntrada;
+  final String visitanteEntrada;
+  final String domicilioEntrada;
+  final String statusEntrada;
+  final String tituloSalida;
+  final String fotoSalida;
+  final String visitanteSalida;
+  final String domicilioSalida;
+
+  const InfoAccessCard({
+    super.key,
+    required this.tituloAcceso,
+    required this.fotoEntrada,
+    required this.visitanteEntrada,
+    required this.domicilioEntrada,
+    required this.statusEntrada,
+    required this.tituloSalida,
+    required this.fotoSalida,
+    required this.visitanteSalida,
+    required this.domicilioSalida,
+  });
+
+  Color _statusColor(String status) {
+    if (status == 'Aceptada') return mainGreenColor;
+    if (status == 'Rechazada') return mainRedColor;
+    if (status == 'Esperando respuesta' || status == 'Sin respuesta') {
+      return Colors.orange;
+    }
+    return Colors.transparent;
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final borderColor = isDark ? Colors.white : Colors.black;
+
+    return Container(
+      margin: const EdgeInsets.all(5),
+      decoration: BoxDecoration(
+        border: Border.all(width: 3, color: borderColor),
+        borderRadius: BorderRadius.circular(30),
+      ),
+      child: LayoutBuilder(
+        builder: (context, constraints) {
+          // Patrón anti-overflow: scroll interno + minHeight para estirarse
+          return ScrollConfiguration(
+            behavior: const _NoGlowBehavior(),
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.all(15),
+              child: ConstrainedBox(
+                constraints: BoxConstraints(minHeight: constraints.maxHeight),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    _section(
+                      context: context,
+                      titulo: tituloAcceso,
+                      foto: fotoEntrada,
+                      visitante: visitanteEntrada,
+                      domicilio: domicilioEntrada,
+                      status: statusEntrada,
+                      isEntrada: true,
+                      // Podemos calcular una altura máxima de imagen proporcional al alto disponible
+                      maxImageHeight: _computeImageMaxHeight(constraints.maxHeight),
+                    ),
+                    const SizedBox(height: 12),
+                    const Divider(thickness: 5),
+                    const SizedBox(height: 12),
+                    _section(
+                      context: context,
+                      titulo: tituloSalida,
+                      foto: fotoSalida,
+                      visitante: visitanteSalida,
+                      domicilio: domicilioSalida,
+                      status: '',
+                      isEntrada: false,
+                      maxImageHeight: _computeImageMaxHeight(constraints.maxHeight),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+
+  // Calcula una altura máxima “razonable” para la imagen según el alto de la card.
+  // En pantallas muy bajas reducimos las imágenes; en pantallas altas las dejamos más grandes.
+  double _computeImageMaxHeight(double maxHeight) {
+    if (!maxHeight.isFinite) return 220; // fallback seguro
+    // Reservamos parte del alto para textos/espaciados; usamos ~30-40% para imagen por sección
+    final h = (maxHeight * 0.35).clamp(120.0, 280.0);
+    return h;
+  }
+// === Foto con altura fija + loader + error ===
+  Widget _photoBox(String? url) {
+    const double kPhotoHeight = 220;
+    final border = BorderRadius.circular(12);
+
+    Widget placeholder([String msg = 'Sin imagen']) => Container(
+      height: kPhotoHeight,
+      decoration: BoxDecoration(
+        color: Color(0xFF1E2230),
+        borderRadius: border,
+        border: Border.all(color: Color(0x334C566A)),
+      ),
+      alignment: Alignment.center,
+      child: const Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(Icons.image_outlined, size: 36),
+          SizedBox(height: 8),
+          Text('Sin imagen', style: TextStyle(fontSize: 12)),
+        ],
+      ),
+    );
+
+    if (url == null || url.isEmpty) return placeholder();
+
+    return ClipRRect(
+      borderRadius: border,
+      child: ConstrainedBox(
+        constraints: const BoxConstraints(
+          minHeight: kPhotoHeight,
+          maxHeight: kPhotoHeight,
+        ),
+        child: Image.network(
+          url,
+          fit: BoxFit.cover,           // usa BoxFit.contain si no quieres recortar
+          gaplessPlayback: true,
+          filterQuality: FilterQuality.medium,
+          cacheWidth: 1000,
+          loadingBuilder: (ctx, child, progress) {
+            if (progress == null) return child;
+            final v = progress.expectedTotalBytes != null
+                ? progress.cumulativeBytesLoaded / progress.expectedTotalBytes!
+                : null;
+            return Stack(
+              fit: StackFit.expand,
+              children: [
+                Container(color: Color(0xFF1E2230)),
+                Align(
+                  alignment: Alignment.bottomCenter,
+                  child: LinearProgressIndicator(value: v),
+                ),
+              ],
+            );
+          },
+          errorBuilder: (ctx, err, st) => placeholder('No se pudo cargar'),
+        ),
+      ),
+    );
+  }
+
+  Widget _section({
+    required BuildContext context,
+    required String titulo,
+    required String foto,
+    required String visitante,
+    required String domicilio,
+    required String status,
+    required bool isEntrada,
+    required double maxImageHeight,
+  }) {
+    final bg = isEntrada ? _statusColor(status) : Colors.transparent;
+
+    return Container(
+      decoration: BoxDecoration(
+        color: bg,
+        borderRadius: BorderRadius.circular(24),
+      ),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 12),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Text(
+            titulo,
+            textAlign: TextAlign.center,
+            style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+          ),
+          const SizedBox(height: 10),
+
+          // Imagen respondiendo a la altura disponible; si no hay foto, dejamos un espacio pequeño
+          if (foto.isNotEmpty)
+            ConstrainedBox(
+              constraints: BoxConstraints(maxHeight: maxImageHeight),
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(15),
+                child: Image.network(
+                  foto,
+                  fit: BoxFit.contain,
+                  // Opcional: placeholder mientras carga
+                  // loadingBuilder: (ctx, child, progress) => progress == null
+                  //     ? child
+                  //     : const SizedBox(
+                  //         height: 60, child: Center(child: CircularProgressIndicator())),
+                  errorBuilder: (_, __, ___) => const SizedBox(
+                    height: 60,
+                    child: Center(child: Icon(Icons.broken_image)),
+                  ),
+                ),
+              ),
+            )
+          else
+            const SizedBox(height: 16),
+
+          const SizedBox(height: 10),
+          _infoRow('Visitante', visitante),
+          const SizedBox(height: 6),
+          _infoRow('Domicilio', domicilio),
+          if (isEntrada) ...[
+            const SizedBox(height: 6),
+            _infoRow('Status', status),
+          ],
+        ],
+      ),
+    );
+  }
+
+  Widget _infoRow(String label, String value) {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        Text('$label: ', style: const TextStyle(fontWeight: FontWeight.bold)),
+        Flexible(child: Text(value, overflow: TextOverflow.ellipsis)),
+      ],
+    );
+  }
+}
+
+// Evita el glow azul en scroll de algunos dispositivos
+class _NoGlowBehavior extends ScrollBehavior {
+  const _NoGlowBehavior();
+  @override
+  Widget buildViewportChrome(BuildContext context, Widget child, AxisDirection axisDirection) {
+    return child;
   }
 }
